@@ -1,18 +1,17 @@
 # Aplicaciones Web - Daviti Gvaramia
 
-Repositorio de prácticas del módulo **Aplicaciones Web** del ciclo **2º CFGM Sistemas Microinformáticos y Redes (SMR)**.
+Aquí voy subiendo las prácticas del módulo de Aplicaciones Web de 2º de SMR.
 
 ## Actividades
 
 | Nº | Actividad | Descripción |
 |---|---|---|
-| 1 | [**Práctica Apache en Ubuntu 24.04**](practica-apache.md) | Instalación, configuración y securización del servidor web Apache: comandos de administración, ficheros de configuración, módulos, virtual hosts y permisos |
+| 1 | [Práctica Apache en Ubuntu 24.04](practica-apache.md) | Instalar y configurar Apache: comandos, archivos de configuración, módulos, virtual hosts y permisos |
 
 ## Estructura del repositorio
 
-- `README.md`: este índice.
-- `practica-apache.md`: memoria de la práctica de Apache.
-- `img/`: capturas de pantalla de la práctica.
+- `practica-apache.md`: la memoria de la práctica de Apache.
+- `img/`: las capturas de pantalla.
 
 ---
 
