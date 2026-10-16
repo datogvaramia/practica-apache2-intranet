@@ -1,6 +1,5 @@
 # Aplicaciones Web - Daviti Gvaramia
 
-**Alumno:** Daviti Gvaramia
 **Fecha:** 126/10/2026
 
 
