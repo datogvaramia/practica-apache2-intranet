@@ -592,3 +592,267 @@ Las herramientas de Debian/Ubuntu ayudan a evitarlo:
 Aun así hay que tener cuidado: si un sitio usa directivas de un módulo desactivado (por ejemplo, `RewriteRule` sin `mod_rewrite`), `apache2ctl configtest` dará un error de sintaxis del tipo *"Invalid command 'RewriteRule'"*. Por eso siempre hay que hacer `configtest` antes de reiniciar.
 
 ---
+
+## Apartado 8. Varios sitios en un mismo servidor (Virtual Hosts)
+
+Un **virtual host** permite que un solo servidor Apache, con una sola IP, aloje **varias webs distintas**. Apache sabe cuál mostrar mirando el nombre de dominio que pide el navegador. En este apartado creo dos sitios: `sitio1.local` y `sitio2.local`.
+
+### 8.1. Crear los directorios y las páginas
+
+```bash
+sudo mkdir -p /var/www/sitio1 /var/www/sitio2
+echo "<h1>Bienvenido a SITIO 1</h1>" | sudo tee /var/www/sitio1/index.html
+echo "<h1>Bienvenido a SITIO 2</h1>" | sudo tee /var/www/sitio2/index.html
+```
+
+![Directorios y páginas de los sitios](img/28-vhost-directorios.png)
+
+Cada sitio necesita su propia carpeta, que será su **DocumentRoot**. `mkdir -p` crea las dos carpetas de una vez (y no da error si ya existen). Luego pongo en cada una un `index.html` con un texto diferente, para poder distinguir fácilmente qué sitio estoy viendo.
+
+### 8.2. Crear los ficheros de configuración
+
+```bash
+sudo nano /etc/apache2/sites-available/sitio1.conf
+```
+
+```apache
+<VirtualHost *:80>
+    ServerName sitio1.local
+    ServerAdmin admin@sitio1.local
+    DocumentRoot /var/www/sitio1
+    <Directory /var/www/sitio1>
+        Options -Indexes +FollowSymLinks
+        AllowOverride None
+        Require all granted
+    </Directory>
+    ErrorLog ${APACHE_LOG_DIR}/sitio1_error.log
+    CustomLog ${APACHE_LOG_DIR}/sitio1_access.log combined
+</VirtualHost>
+```
+
+![sitio1.conf](img/29-sitio1-conf.png)
+
+Qué hace cada directiva:
+
+| Directiva | Significado |
+|---|---|
+| `<VirtualHost *:80>` | El sitio responde en el puerto 80, en cualquier IP del servidor |
+| `ServerName sitio1.local` | **La clave del virtual host**: Apache usa este sitio cuando el navegador pide `sitio1.local` |
+| `ServerAdmin` | Correo del responsable de este sitio |
+| `DocumentRoot /var/www/sitio1` | Carpeta de donde salen los ficheros de este sitio |
+| `Options -Indexes` | Si falta el `index.html`, **no muestra el listado de ficheros** de la carpeta (medida de seguridad) |
+| `Options +FollowSymLinks` | Permite seguir enlaces simbólicos dentro de la carpeta |
+| `AllowOverride None` | Ignora los ficheros `.htaccess`. Es más seguro y más rápido |
+| `Require all granted` | Permite el acceso a todo el mundo |
+| `ErrorLog` / `CustomLog` | Cada sitio guarda **sus propios logs**, así es más fácil saber de qué web viene un error |
+
+```bash
+sudo nano /etc/apache2/sites-available/sitio2.conf
+```
+
+![sitio2.conf](img/30-sitio2-conf.png)
+
+`sitio2.conf` es igual pero cambiando `sitio1` por `sitio2` en el nombre, el correo, la carpeta y los logs.
+
+### 8.3. Activar los sitios y desactivar el de por defecto
+
+```bash
+sudo a2ensite sitio1.conf sitio2.conf
+sudo a2dissite 000-default.conf
+sudo apache2ctl configtest
+sudo systemctl reload apache2
+apache2ctl -S
+```
+
+```text
+Enabling site sitio1.
+Enabling site sitio2.
+Syntax OK
+
+VirtualHost configuration:
+*:80                   is a NameVirtualHost
+         default server sitio1.local (/etc/apache2/sites-enabled/sitio1.conf:1)
+         port 80 namevhost sitio1.local (/etc/apache2/sites-enabled/sitio1.conf:1)
+         port 80 namevhost sitio2.local (/etc/apache2/sites-enabled/sitio2.conf:1)
+...
+User: name="www-data" id=33
+Group: name="www-data" id=33
+```
+
+`a2ensite` crea los enlaces de los dos sitios en `sites-enabled` y `a2dissite` quita el del sitio por defecto. Después compruebo la sintaxis y recargo (para activar sitios basta con `reload`, como indica el propio `a2ensite`).
+
+La salida de `apache2ctl -S` confirma que todo está bien:
+
+- **`*:80 is a NameVirtualHost`** → en el puerto 80 hay varios sitios diferenciados por nombre.
+- Aparecen **`sitio1.local` y `sitio2.local`**, cada uno con su fichero de configuración.
+- **`000-default` ya no aparece**, así que se ha desactivado correctamente.
+- **`default server sitio1.local`** → si llega una petición con un nombre que no coincide con ningún sitio (por ejemplo, entrando por la IP), Apache mostrará `sitio1`, porque es el primero que carga (orden alfabético).
+- Apache se ejecuta como **`www-data`**, dato que uso en el apartado 9.
+
+### 8.4. Resolución de nombres
+
+Los dominios `.local` no existen en Internet, así que hay que decirle al equipo a qué IP corresponden. Lo hago añadiendo esta línea en `/etc/hosts`:
+
+```bash
+sudo nano /etc/hosts
+```
+
+```text
+127.0.0.1     sitio1.local sitio2.local
+```
+
+`/etc/hosts` se consulta **antes que el DNS**, así que al escribir `sitio1.local` el sistema lo resuelve a `127.0.0.1` (el propio servidor). Para probar desde otro equipo de la red, en su `hosts` habría que poner la IP real del servidor en lugar de `127.0.0.1` (en Windows el fichero está en `C:\Windows\System32\drivers\etc\hosts`).
+
+### 8.5. Pruebas 📸
+
+```bash
+curl http://sitio1.local
+curl http://sitio2.local
+```
+
+```text
+<h1>Bienvenido a SITIO 1</h1>
+<h1>Bienvenido a SITIO 2</h1>
+```
+
+![Virtual hosts funcionando y apache2ctl -S](img/31-a2ensite-apache2ctl-S-curl.png)
+
+Cada dominio devuelve **su propia página**, aunque los dos están en el mismo servidor, en la misma IP y en el mismo puerto. Los virtual hosts funcionan correctamente.
+
+### ❓ ¿Qué diferencia hay entre virtual hosts basados en nombre y basados en IP? ¿Cuál has usado?
+
+| | Basados en **nombre** | Basados en **IP** |
+|---|---|---|
+| Cómo distingue los sitios | Por el nombre de dominio que envía el navegador en la cabecera `Host` | Por la dirección IP a la que llega la petición |
+| IPs necesarias | Una sola IP para todos los sitios | Una IP distinta para cada sitio |
+| Configuración | `<VirtualHost *:80>` + `ServerName` | `<VirtualHost 192.168.1.10:80>`, `<VirtualHost 192.168.1.11:80>`… |
+| Uso actual | Es lo habitual (hosting compartido, varias webs en un servidor) | Poco usado; solo en casos especiales |
+
+**Yo he usado virtual hosts basados en nombre.** Los dos sitios usan `<VirtualHost *:80>` y se diferencian solo por su `ServerName`. Lo confirma la línea `*:80 is a NameVirtualHost` de `apache2ctl -S`.
+
+---
+
+## Apartado 9. Permisos y propietarios
+
+### 9.1. Usuario con el que se ejecuta Apache
+
+```bash
+ps aux | grep apache2
+grep -E "APACHE_RUN_(USER|GROUP)" /etc/apache2/envvars
+ls -ld /var/www/sitio1 /var/www/sitio1/index.html
+```
+
+```text
+root      11526  ...  /usr/sbin/apache2 -k start
+www-data  11783  ...  /usr/sbin/apache2 -k start
+www-data  11784  ...  /usr/sbin/apache2 -k start
+
+export APACHE_RUN_USER=www-data
+export APACHE_RUN_GROUP=www-data
+
+drwxr-xr-x 2 root root 4096 Oct 16 07:40 /var/www/sitio1
+-rw-r--r-- 1 root root   30 Oct 16 07:40 /var/www/sitio1/index.html
+```
+
+![Procesos, usuario de Apache y permisos](img/32-ps-envvars-permisos.png)
+
+Esta captura muestra cómo funciona Apache por dentro:
+
+- Hay **un proceso padre que se ejecuta como `root`** (PID 11526). Lo necesita para poder abrir el puerto 80, porque los puertos por debajo del 1024 solo los puede usar root.
+- Los **procesos hijos se ejecutan como `www-data`** (11783, 11784). Son los que atienden a los visitantes. Así, si alguien encontrara un fallo en la web, solo tendría los permisos de `www-data`, no los de root.
+- En `envvars` se ve que este usuario y grupo están definidos en **`APACHE_RUN_USER`** y **`APACHE_RUN_GROUP`**.
+- La carpeta y el `index.html` de `sitio1` **pertenecen a `root`**, porque los creé con `sudo`.
+
+> En la salida de `ps` también aparecen varios procesos `systemctl status apache2` en estado `T` (detenido). No son de Apache: son consultas de estado que dejé suspendidas al pulsar `Ctrl+Z` en vez de `q`. Lo explico en [problemas encontrados](#problemas-encontrados-y-cómo-los-resolví).
+
+### 9.2. Aplicar una política de permisos razonable
+
+```bash
+sudo chown -R www-data:www-data /var/www/sitio1
+sudo find /var/www/sitio1 -type d -exec chmod 755 {} \;
+sudo find /var/www/sitio1 -type f -exec chmod 644 {} \;
+```
+
+![chown y chmod](img/33-chown-chmod.png)
+
+- **`chown -R www-data:www-data`** cambia el propietario y el grupo de la carpeta y de todo su contenido (`-R` = recursivo) a `www-data`.
+- **`find ... -type d -exec chmod 755`** busca solo los **directorios** y les pone permisos 755.
+- **`find ... -type f -exec chmod 644`** busca solo los **ficheros** y les pone permisos 644.
+
+Se usa `find` en lugar de `chmod -R` porque los directorios y los ficheros necesitan permisos distintos: un `chmod -R 755` daría permiso de ejecución a todos los ficheros, cosa que no deben tener.
+
+### 9.3. Prueba del error 403
+
+```bash
+sudo chmod 000 /var/www/sitio1/index.html
+curl -I http://sitio1.local
+sudo tail /var/log/apache2/sitio1_error.log
+```
+
+Al quitar todos los permisos al `index.html`, Apache (que trabaja como `www-data`) ya no puede leerlo y responde **`403 Forbidden`**. En el log de errores del sitio aparece una línea con el código **`AH00132: file permissions deny server access: /var/www/sitio1/index.html`**, que indica exactamente qué fichero no se ha podido leer y por qué. Esto demuestra que **los logs son la primera herramienta para diagnosticar un fallo**.
+
+Después restauro los permisos correctos:
+
+```bash
+sudo chmod 644 /var/www/sitio1/index.html
+```
+
+### Qué significan 755 y 644
+
+Cada cifra corresponde a un grupo de usuarios: **propietario**, **grupo** y **otros**. Cada cifra es la suma de: lectura (**r = 4**), escritura (**w = 2**) y ejecución (**x = 1**).
+
+| Permiso | Propietario | Grupo | Otros | Se aplica a |
+|---|---|---|---|---|
+| **755** (`rwxr-xr-x`) | 7 = leer, escribir, entrar | 5 = leer, entrar | 5 = leer, entrar | **Directorios**: en una carpeta, la `x` significa poder entrar en ella |
+| **644** (`rw-r--r--`) | 6 = leer, escribir | 4 = solo leer | 4 = solo leer | **Ficheros**: solo el propietario modifica, el resto solo lee |
+
+Con esto, Apache puede leer y servir la web, pero solo el propietario puede modificarla.
+
+### Por qué nunca se deben usar permisos 777
+
+**777 (`rwxrwxrwx`) significa que cualquier usuario del sistema puede leer, modificar y ejecutar** ese fichero o carpeta. En un servidor web es muy peligroso:
+
+- Si un atacante consigue entrar por un fallo de la web (por ejemplo, un formulario de subida mal hecho), podría **modificar las páginas** (*defacement*) o **subir un script malicioso** y ejecutarlo.
+- Cualquier otro usuario o servicio del servidor podría cambiar o borrar la web.
+- Es una mala práctica que suele usarse para "arreglar rápido" un problema de permisos, pero en realidad abre un agujero de seguridad. Lo correcto es averiguar qué usuario necesita el permiso y dárselo solo a él.
+
+### Por qué el contenido web no debe pertenecer a root ni ser escribible por todos
+
+- **No debe pertenecer a root** porque se aplica el **principio de mínimo privilegio**: cada usuario debe tener solo los permisos que necesita. Para editar la web no hace falta ser root, y trabajar siempre como root aumenta el riesgo de romper el sistema por un error.
+- **No debe ser escribible por todos** porque, si un atacante consigue ejecutar código a través de Apache (como `www-data`) o desde otra cuenta, podría **modificar la web** y usarla para engañar a los visitantes o repartir malware.
+- Lo ideal es que Apache pueda **leer** el contenido, y que solo el usuario o grupo que administra la web pueda **escribir**. En entornos más estrictos incluso se deja el contenido con un propietario distinto de `www-data` (por ejemplo, el usuario que despliega la web) y `www-data` solo con lectura, para que Apache no pueda modificar los ficheros que sirve.
+
+---
+
+## Conclusiones y problemas encontrados
+
+### Conclusiones
+
+Con esta práctica he montado un servidor web Apache completo en Ubuntu 24.04, desde la instalación hasta tener **dos webs distintas funcionando en el mismo servidor**. Lo más importante que he aprendido es:
+
+- **Comprobar siempre**: `systemctl status`, `ss`, `curl` y `apache2ctl -S` permiten saber si el servidor funciona sin necesidad de abrir un navegador.
+- **La organización de Ubuntu** en `*-available` / `*-enabled` con enlaces simbólicos hace muy fácil activar y desactivar sitios y módulos sin perder la configuración.
+- **`apache2ctl configtest` antes de cada recarga** evita dejar el servidor caído por un error de escritura.
+- **`reload` es mejor que `restart`** cuando solo cambia la configuración, porque no corta a los usuarios; `restart` solo hace falta con los módulos.
+- **Los permisos son parte de la seguridad**: Apache trabaja como `www-data`, los ficheros deben tener 644, las carpetas 755 y nunca 777.
+- **Copia de seguridad antes de editar**: un simple `cp fichero fichero.bak` puede ahorrar mucho trabajo.
+
+### Problemas encontrados y cómo los resolví
+
+| Problema | Causa | Solución |
+|---|---|---|
+| Aviso **`AH00558: Could not reliably determine the server's fully qualified domain name`** al arrancar y al hacer `configtest` | Apache no tenía definido un `ServerName` global y usaba `127.0.1.1` | Creé `servername.conf` con `ServerName localhost` y lo activé con `a2enconf` (apartado 6.3). Después `configtest` solo dice `Syntax OK` |
+| La terminal se quedaba "parada" tras `systemctl status` y aparecía **`[1]+ Stopped`** | La salida se abre en un paginador y yo pulsaba `Ctrl+Z`, que **suspende** el proceso en vez de cerrarlo. Por eso en `ps aux` salían varios `systemctl status` en estado `T` | Salir del paginador con la tecla **`q`**. Los procesos suspendidos se pueden recuperar con `fg` o cerrar con `kill %1` |
+| Mensajes **`already enabled`** al ejecutar `a2enconf servername` y `a2ensite` | Había ejecutado el comando antes y el enlace ya existía | No es un error: el comando simplemente no hace nada. Se puede comprobar con `ls -l` en el directorio `*-enabled` |
+| Después de cambiar el puerto había que acordarse de **volver al 80** en dos ficheros | El puerto se define en `ports.conf` y en cada `<VirtualHost>` | Restauré los dos ficheros y lo comprobé con `ss -tulpn` (vuelve a salir `*:80`) |
+| Riesgo de que `sudo echo "..." > fichero` dé **"Permiso denegado"** | La redirección `>` la ejecuta el usuario normal, no `sudo` | Usar `echo "..." \| sudo tee fichero`, como en los apartados 6 y 8 |
+
+---
+
+<div align="center">
+
+**Daviti Gvaramia** · 2º SMR · Aplicaciones Web · 2026
+
+[⬅ Volver al README](README.md)
+
+</div>
