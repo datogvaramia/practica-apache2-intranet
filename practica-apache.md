@@ -1,5 +1,3 @@
-<div align="center">
-
 # Práctica: Instalación, configuración y securización de Apache en Ubuntu 24.04
 
 **Alumno:** Daviti Gvaramia
