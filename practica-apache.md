@@ -5,9 +5,6 @@
 **Módulo:** Aplicaciones Web
 **Fecha:** 16/10/2026
 
-
-</div>
-
 ---
 
 ## Índice
@@ -58,7 +55,7 @@ sudo apt upgrade -y
 
 `apt upgrade` compara lo que tengo instalado con la lista que acabo de descargar y **actualiza todos los paquetes que tengan una versión nueva**. La opción `-y` responde "sí" automáticamente a la confirmación, para que no se quede esperando.
 
-### 1.3. Comprobar la versión del sistema 📸
+### 1.3. Comprobar la versión del sistema
 
 ```bash
 lsb_release -a
@@ -105,7 +102,7 @@ Server built:   2026-07-06T16:27:55
 
 La opción `-v` muestra la versión del servidor. Tengo instalada la **versión 2.4.58**, que pertenece a la rama 2.4, la estable y actual de Apache.
 
-### ❓ ¿Qué paquetes adicionales se han instalado como dependencias?
+### Pregunta de reflexión: ¿Qué paquetes adicionales se han instalado como dependencias?
 
 Al instalar `apache2`, `apt` instala también otros paquetes que Apache necesita para funcionar. En Ubuntu 24.04 los principales son:
 
@@ -129,7 +126,7 @@ grep -A3 "install apache2" /var/log/apt/history.log
 
 ## Apartado 3. Comprobación del funcionamiento
 
-### 3.1. Estado del servicio 📸
+### 3.1. Estado del servicio
 
 ```bash
 sudo systemctl status apache2
@@ -148,9 +145,9 @@ sudo systemctl status apache2
 
 Lo que hay que fijarse en esta salida:
 
-- **`Loaded: ... enabled`** → el servicio está activado para arrancar solo cada vez que se enciende la máquina.
-- **`Active: active (running)`** → Apache está funcionando ahora mismo.
-- **`Main PID: 7632`** → es el proceso principal. Debajo aparecen otros procesos hijos (7633, 7635), que son los que atienden las peticiones de los clientes.
+- **`Loaded: ... enabled`**: el servicio está activado para arrancar solo cada vez que se enciende la máquina.
+- **`Active: active (running)`**: Apache está funcionando ahora mismo.
+- **`Main PID: 7632`**: es el proceso principal. Debajo aparecen otros procesos hijos (7633, 7635), que son los que atienden las peticiones de los clientes.
 - Al final aparece el aviso **`AH00558: Could not reliably determine the server's fully qualified domain name`**. No es un error: Apache funciona, pero avisa de que no tiene definido un `ServerName`. Lo soluciono en el [apartado 6.3](#63-definir-el-nombre-del-servidor).
 
 ### 3.2. Puertos en escucha
@@ -215,7 +212,7 @@ Rules updated (v6)
 
 La regla se añade dos veces: una para IPv4 y otra para IPv6 (`v6`). Mientras el firewall esté desactivado la regla no tiene efecto, pero quedará aplicada en cuanto se active con `sudo ufw enable`.
 
-### ❓ ¿Qué diferencia hay entre los perfiles Apache, Apache Full y Apache Secure?
+### Pregunta de reflexión: ¿Qué diferencia hay entre los perfiles Apache, Apache Full y Apache Secure?
 
 Son perfiles que Apache registra en UFW para no tener que abrir los puertos a mano. Se pueden ver con `sudo ufw app list`.
 
@@ -250,7 +247,7 @@ A lo largo de la práctica he usado todos estos comandos: `configtest` y `reload
 
 > **Buena costumbre:** ejecutar siempre `apache2ctl configtest` **antes** de recargar o reiniciar. Si hay un error de sintaxis y se reinicia, Apache no vuelve a arrancar y la web se queda caída.
 
-### ❓ ¿Cuándo conviene usar reload en lugar de restart?
+### Pregunta de reflexión: ¿Cuándo conviene usar reload en lugar de restart?
 
 **`reload`** se usa cuando solo he cambiado la configuración (un virtual host, un `ServerName`, una página de error…). Apache relee los ficheros y aplica los cambios mientras termina de atender las peticiones que ya tenía abiertas, así que **los usuarios no notan ningún corte**. En un servidor en producción es la opción preferida.
 
@@ -260,7 +257,7 @@ A lo largo de la práctica he usado todos estos comandos: `configtest` y `reload
 
 ## Apartado 5. Ficheros y directorios importantes
 
-### 5.1. Estructura de `/etc/apache2/` 📸
+### 5.1. Estructura de `/etc/apache2/`
 
 ```bash
 ls -l /etc/apache2/
@@ -312,7 +309,7 @@ lrwxrwxrwx 1 root root 35 Sep 30 07:39 000-default.conf -> ../sites-available/00
 
 La `l` al principio de los permisos y la flecha `->` indican que **`000-default.conf` es un enlace simbólico** que apunta al fichero real que está en `sites-available`. El fichero existe una sola vez; en `sites-enabled` solo hay un "acceso directo" a él.
 
-### ❓ ¿Por qué Apache usa enlaces simbólicos entre los directorios `*-available` y `*-enabled`?
+### Pregunta de reflexión: ¿Por qué Apache usa enlaces simbólicos entre los directorios `*-available` y `*-enabled`?
 
 Porque permite **activar y desactivar** sitios, módulos o configuraciones **sin borrar ni copiar ficheros**:
 
@@ -335,7 +332,7 @@ sudo cp /etc/apache2/apache2.conf /etc/apache2/apache2.conf.bak
 
 Antes de tocar cualquier fichero de configuración hago una copia con la extensión `.bak`. Si me equivoco y Apache deja de funcionar, puedo restaurar el original con `sudo cp apache2.conf.bak apache2.conf`. Es una costumbre básica de cualquier administrador de sistemas.
 
-### 6.1. Cambiar la página de inicio 📸
+### 6.1. Cambiar la página de inicio
 
 ```bash
 echo "<h1>Servidor de DAVITI</h1>" | sudo tee /var/www/html/index.html
@@ -351,7 +348,7 @@ echo "<h1>Servidor de DAVITI</h1>" | sudo tee /var/www/html/index.html
 
 El cambio se comprueba en la captura del apartado 6.2: la respuesta ya no mide 10671 bytes como la página de Ubuntu, sino **`Content-Length: 28`**, que es exactamente el tamaño de mi nueva página.
 
-### 6.2. Cambiar el puerto de escucha al 8080 📸
+### 6.2. Cambiar el puerto de escucha al 8080
 
 Edito los dos ficheros que indican el puerto:
 
@@ -433,7 +430,7 @@ sudo systemctl status apache2
 
 En el estado del servicio aparece la línea **`ExecReload=/usr/sbin/apachectl graceful (code=exited, status=0/SUCCESS)`**: la recarga se ha hecho de forma *graceful* (sin cortar conexiones) y ha terminado correctamente. También se ve que el proceso principal sigue siendo el mismo (**PID 7632**) desde el 30 de septiembre: con `reload` Apache nunca se ha llegado a parar.
 
-### 6.4. Cambiar el correo del administrador 📸
+### 6.4. Cambiar el correo del administrador
 
 ```bash
 sudo nano /etc/apache2/sites-available/000-default.conf
@@ -451,7 +448,7 @@ ServerAdmin daviti@apache2.com
 
 `ServerAdmin` es la dirección de correo del responsable del servidor. Apache la muestra en algunas páginas de error que genera él mismo (por ejemplo, en un error 500), para que el usuario sepa a quién avisar. Por defecto viene `webmaster@localhost` y la he cambiado por **`daviti@apache2.com`**.
 
-### 6.5. Personalizar la página de error 404 📸
+### 6.5. Personalizar la página de error 404
 
 En el mismo fichero añado la directiva `ErrorDocument` antes de cerrar el VirtualHost:
 
@@ -570,11 +567,11 @@ Lo que se observa en esta captura:
 | `mod_alias` | Alias y redirecciones | Asocia una URL a una carpeta distinta del DocumentRoot (`Alias`) o redirige a otra dirección (`Redirect`) |
 | `mod_auth_basic` | Autenticación básica | Pide usuario y contraseña para entrar en una zona de la web. Los usuarios se crean con `htpasswd` |
 | `mod_status` | Página de estado | Muestra en `/server-status` las conexiones activas, la carga y los procesos de Apache. Lo he desactivado en esta práctica |
-| `mod_mime` | Tipos de fichero | Indica al navegador qué tipo de contenido envía según la extensión (`.html` → `text/html`, `.png` → `image/png`) |
+| `mod_mime` | Tipos de fichero | Indica al navegador qué tipo de contenido envía según la extensión (`.html` es `text/html`, `.png` es `image/png`) |
 | `mod_mpm_event` | Gestión de procesos | Decide cómo reparte Apache el trabajo entre procesos e hilos. `event` es el que usa Ubuntu por defecto, el más eficiente |
 | `mod_php` / PHP-FPM | Ejecución de PHP | Permite ejecutar páginas dinámicas en PHP. No viene instalado por defecto (opcional) |
 
-### ❓ ¿Qué ocurre si desactivas un módulo del que depende otro?
+### Pregunta de reflexión: ¿Qué ocurre si desactivas un módulo del que depende otro?
 
 Que el módulo que depende de él **dejaría de funcionar** y Apache podría no arrancar, porque las directivas de ese módulo ya no se entenderían.
 
@@ -677,10 +674,10 @@ Group: name="www-data" id=33
 
 La salida de `apache2ctl -S` confirma que todo está bien:
 
-- **`*:80 is a NameVirtualHost`** → en el puerto 80 hay varios sitios diferenciados por nombre.
+- **`*:80 is a NameVirtualHost`**: en el puerto 80 hay varios sitios diferenciados por nombre.
 - Aparecen **`sitio1.local` y `sitio2.local`**, cada uno con su fichero de configuración.
 - **`000-default` ya no aparece**, así que se ha desactivado correctamente.
-- **`default server sitio1.local`** → si llega una petición con un nombre que no coincide con ningún sitio (por ejemplo, entrando por la IP), Apache mostrará `sitio1`, porque es el primero que carga (orden alfabético).
+- **`default server sitio1.local`**: si llega una petición con un nombre que no coincide con ningún sitio (por ejemplo, entrando por la IP), Apache mostrará `sitio1`, porque es el primero que carga (orden alfabético).
 - Apache se ejecuta como **`www-data`**, dato que uso en el apartado 9.
 
 ### 8.4. Resolución de nombres
@@ -697,7 +694,7 @@ sudo nano /etc/hosts
 
 `/etc/hosts` se consulta **antes que el DNS**, así que al escribir `sitio1.local` el sistema lo resuelve a `127.0.0.1` (el propio servidor). Para probar desde otro equipo de la red, en su `hosts` habría que poner la IP real del servidor en lugar de `127.0.0.1` (en Windows el fichero está en `C:\Windows\System32\drivers\etc\hosts`).
 
-### 8.5. Pruebas 📸
+### 8.5. Pruebas
 
 ```bash
 curl http://sitio1.local
@@ -713,7 +710,7 @@ curl http://sitio2.local
 
 Cada dominio devuelve **su propia página**, aunque los dos están en el mismo servidor, en la misma IP y en el mismo puerto. Los virtual hosts funcionan correctamente.
 
-### ❓ ¿Qué diferencia hay entre virtual hosts basados en nombre y basados en IP? ¿Cuál has usado?
+### Pregunta de reflexión: ¿Qué diferencia hay entre virtual hosts basados en nombre y basados en IP? ¿Cuál has usado?
 
 | | Basados en **nombre** | Basados en **IP** |
 |---|---|---|
@@ -845,8 +842,8 @@ Con esta práctica he montado un servidor web Apache completo en Ubuntu 24.04, d
 
 <div align="center">
 
-**Daviti Gvaramia** · 2º SMR · Aplicaciones Web · 2026
+**Daviti Gvaramia**, 2º SMR, Aplicaciones Web, 2026
 
-[⬅ Volver al README](README.md)
+[Volver al README](README.md)
 
 </div>

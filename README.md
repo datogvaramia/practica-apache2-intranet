@@ -1,4 +1,4 @@
-# Aplicaciones Web — Daviti Gvaramia
+# Aplicaciones Web - Daviti Gvaramia
 
 Repositorio de prácticas del módulo **Aplicaciones Web** del ciclo **2º CFGM Sistemas Microinformáticos y Redes (SMR)**.
 
@@ -10,13 +10,10 @@ Repositorio de prácticas del módulo **Aplicaciones Web** del ciclo **2º CFGM 
 
 ## Estructura del repositorio
 
-```text
-practica-apache2-intranet/
-├── README.md            ← este índice
-├── practica-apache.md   ← memoria de la práctica de Apache
-└── img/                 ← capturas de pantalla de la práctica
-```
+- `README.md`: este índice.
+- `practica-apache.md`: memoria de la práctica de Apache.
+- `img/`: capturas de pantalla de la práctica.
 
 ---
 
-**Autor:** Daviti Gvaramia · [@datogvaramia](https://github.com/datogvaramia)
+**Autor:** Daviti Gvaramia, [@datogvaramia](https://github.com/datogvaramia)
