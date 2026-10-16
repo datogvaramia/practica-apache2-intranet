@@ -5,7 +5,7 @@
 **Alumno:** Daviti Gvaramia
 **Ciclo:** 2º CFGM Sistemas Microinformáticos y Redes (SMR)
 **Módulo:** Aplicaciones Web
-**Fecha:** octubre de 2026
+**Fecha:** 16/10/2026
 
 
 </div>
