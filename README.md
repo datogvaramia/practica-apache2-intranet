@@ -1,6 +1,6 @@
 # Aplicaciones Web - Daviti Gvaramia
 
-**Fecha:** 126/10/2026
+**Fecha:** 16/10/2026
 
 
 Aquí voy subiendo las prácticas del módulo de Aplicaciones Web de 2º de SMR.
