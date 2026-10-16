@@ -1,6 +1,6 @@
 # Aplicaciones Web - Daviti Gvaramia
 
-**Alumno:** Daviti Gvaramia, [@datogvaramia](https://github.com/datogvaramia)
+**Alumno:** Daviti Gvaramia
 
 Aquí voy subiendo las prácticas del módulo de Aplicaciones Web de 2º de SMR.
 
