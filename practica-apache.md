@@ -54,14 +54,6 @@ Aquí ya sí se actualizan todos los paquetes que tienen versión nueva. El `-y`
 lsb_release -a
 ```
 
-```text
-No LSB modules are available.
-Distributor ID: Ubuntu
-Description:    Ubuntu 24.04.5 LTS
-Release:        24.04
-Codename:       noble
-```
-
 ![Versión de Ubuntu](img/03-lsb-release.png)
 
 Con esto compruebo que tengo Ubuntu 24.04.5 LTS (se llama noble), que es la que pide la práctica. LTS quiere decir que tiene soporte durante muchos años, por eso se usa en servidores. Lo de "No LSB modules are available" no es un error, sale siempre.
@@ -84,11 +76,6 @@ Instala el servidor web Apache. Cuando termina, Ubuntu ya lo arranca solo y lo d
 
 ```bash
 apache2 -v
-```
-
-```text
-Server version: Apache/2.4.58 (Ubuntu)
-Server built:   2026-07-06T16:27:55
 ```
 
 ![apache2 -v](img/05-apache2-version.png)
@@ -123,13 +110,6 @@ grep -A3 "install apache2" /var/log/apt/history.log
 sudo systemctl status apache2
 ```
 
-```text
-● apache2.service - The Apache HTTP Server
-     Loaded: loaded (/usr/lib/systemd/system/apache2.service; enabled; preset: enabled)
-     Active: active (running) since Wed 2026-09-30 07:39:04 UTC; 2min 10s ago
-   Main PID: 7632 (apache2)
-```
-
 ![Estado del servicio Apache](img/06-systemctl-status.png)
 
 Lo importante de aquí:
@@ -145,10 +125,6 @@ Lo importante de aquí:
 sudo ss -tulpn | grep apache2
 ```
 
-```text
-tcp   LISTEN 0   511   *:80   *:*   users:(("apache2",pid=7635,fd=4),("apache2",pid=7633,fd=4),("apache2",pid=7632,fd=4))
-```
-
 ![Puertos en escucha](img/07-ss-puertos.png)
 
 `ss` enseña los puertos que están abiertos y con `grep` me quedo solo con los de Apache. Se ve que Apache está escuchando en el **puerto 80**, que es el de HTTP. El asterisco quiere decir que escucha en todas las IPs, así que se puede entrar también desde otro ordenador.
@@ -157,13 +133,6 @@ tcp   LISTEN 0   511   *:80   *:*   users:(("apache2",pid=7635,fd=4),("apache2",
 
 ```bash
 curl -I http://localhost
-```
-
-```text
-HTTP/1.1 200 OK
-Server: Apache/2.4.58 (Ubuntu)
-Content-Length: 10671
-Content-Type: text/html
 ```
 
 ![curl -I http://localhost](img/08-curl-localhost.png)
@@ -178,21 +147,12 @@ Si en el navegador pongo la IP del servidor (la saco con `ip a`) sale la página
 sudo ufw status
 ```
 
-```text
-Status: inactive
-```
-
 ![sudo ufw status](img/09-ufw-status.png)
 
 En mi máquina el firewall está desactivado, por eso Apache ya funcionaba sin tocar nada. Aun así añado la regla por si lo activo más adelante:
 
 ```bash
 sudo ufw allow 'Apache'
-```
-
-```text
-Rules updated
-Rules updated (v6)
 ```
 
 ![sudo ufw allow 'Apache'](img/10-ufw-allow-apache.png)
@@ -248,19 +208,6 @@ Un truco que he aprendido: hacer siempre `configtest` antes de reiniciar. Si hay
 ls -l /etc/apache2/
 ```
 
-```text
--rw-r--r-- 1 root root  7178 Jul  6 16:27 apache2.conf
-drwxr-xr-x 2 root root  4096 Sep 30 07:38 conf-available
-drwxr-xr-x 2 root root  4096 Sep 30 07:39 conf-enabled
--rw-r--r-- 1 root root  1782 Mar 18  2024 envvars
--rw-r--r-- 1 root root 31063 Mar 18  2024 magic
-drwxr-xr-x 2 root root 12288 Sep 30 07:39 mods-available
-drwxr-xr-x 2 root root  4096 Sep 30 07:39 mods-enabled
--rw-r--r-- 1 root root   274 Mar 18  2024 ports.conf
-drwxr-xr-x 2 root root  4096 Sep 30 07:39 sites-available
-drwxr-xr-x 2 root root  4096 Sep 30 07:39 sites-enabled
-```
-
 ![Contenido de /etc/apache2](img/11-ls-etc-apache2.png)
 
 Aquí está toda la configuración de Apache. Todo es de root, por eso para editar cualquier cosa hay que poner `sudo`. Se ve que hay carpetas por parejas: available y enabled.
@@ -284,10 +231,6 @@ Aquí está toda la configuración de Apache. Todo es de root, por eso para edit
 
 ```bash
 ls -l /etc/apache2/sites-enabled/
-```
-
-```text
-lrwxrwxrwx 1 root root 35 Sep 30 07:39 000-default.conf -> ../sites-available/000-default.conf
 ```
 
 ![Enlaces simbólicos en sites-enabled](img/12-sites-enabled-enlaces.png)
@@ -318,10 +261,6 @@ Antes de cambiar nada hago una copia del archivo. Si la lío, solo tengo que vol
 
 ```bash
 echo "<h1>Servidor de DAVITI</h1>" | sudo tee /var/www/html/index.html
-```
-
-```text
-<h1>Servidor de DAVITI</h1>
 ```
 
 ![Nueva página de inicio](img/14-nueva-index.png)
@@ -358,14 +297,6 @@ sudo systemctl reload apache2
 curl -I http://localhost:8080
 ```
 
-```text
-Syntax OK
-HTTP/1.1 200 OK
-Server: Apache/2.4.58 (Ubuntu)
-Content-Length: 28
-Content-Type: text/html
-```
-
 ![Apache funcionando en el puerto 8080](img/17-puerto-8080-curl.png)
 
 Sale Syntax OK (con el aviso de antes, que todavía no lo había quitado) y el curl al puerto 8080 da 200 OK, así que funciona. Al final de la captura se ve que vuelvo a abrir el archivo para dejar el puerto 80 otra vez, como dice la práctica.
@@ -380,11 +311,6 @@ sudo a2enconf servername
 sudo systemctl reload apache2
 ```
 
-```text
-ServerName localhost
-Conf servername already enabled
-```
-
 ![Definir ServerName](img/18-servername.png)
 
 Creo un archivo con `ServerName localhost` y lo activo con `a2enconf`. Me salió "already enabled" porque ya lo había activado antes en otro intento.
@@ -393,10 +319,6 @@ Lo compruebo:
 
 ```bash
 sudo apache2ctl configtest
-```
-
-```text
-Syntax OK
 ```
 
 ![configtest sin aviso](img/19-configtest-sin-aviso.png)
@@ -420,11 +342,7 @@ sudo nano /etc/apache2/sites-available/000-default.conf
 
 ![Abrir 000-default.conf](img/21-nano-000-default.png)
 
-Cambio la línea de `ServerAdmin`:
-
-```apache
-ServerAdmin daviti@apache2.com
-```
+Cambio la línea de `ServerAdmin` y pongo `ServerAdmin daviti@apache2.com`:
 
 ![ServerAdmin modificado](img/23-serveradmin.png)
 
@@ -432,11 +350,7 @@ ServerAdmin es el correo del que se encarga del servidor. Sale en algunas págin
 
 ### 6.5. Página de error 404 personalizada
 
-En el mismo archivo añado esta línea antes de `</VirtualHost>`:
-
-```apache
-ErrorDocument 404 /404.html
-```
+En el mismo archivo añado la línea `ErrorDocument 404 /404.html` antes de `</VirtualHost>`:
 
 ![000-default.conf con ErrorDocument](img/22-000-default-errordocument.png)
 
@@ -456,14 +370,6 @@ Y lo pruebo entrando en una ruta que no existe:
 ```bash
 sudo ss -tulpn | grep apache2
 curl -I http://localhost/ruta-inexistente
-```
-
-```text
-tcp  LISTEN 0  511  *:80  *:*  users:(("apache2",pid=10654,fd=4),...)
-HTTP/1.1 404 Not Found
-Server: Apache/2.4.58 (Ubuntu)
-Content-Length: 61
-Content-Type: text/html
 ```
 
 ![Error 404 personalizado](img/25-curl-404-puerto80.png)
@@ -505,28 +411,10 @@ sudo systemctl restart apache2
 apache2ctl -M | grep -E "rewrite|headers|ssl"
 ```
 
-```text
-Enabling module rewrite.
-Enabling module headers.
-Considering dependency mime for ssl:
-Module mime already enabled
-Considering dependency socache_shmcb for ssl:
-Enabling module socache_shmcb.
-Enabling module ssl.
-
- headers_module (shared)
- rewrite_module (shared)
- ssl_module (shared)
-```
-
 ```bash
 sudo a2dismod status
 sudo systemctl restart apache2
 apache2ctl -M | grep status
-```
-
-```text
-Module status disabled.
 ```
 
 ![Activar y desactivar módulos](img/27-a2enmod-a2dismod.png)
@@ -587,21 +475,6 @@ Cada web necesita su carpeta. Creo las dos y en cada una pongo un index.html con
 sudo nano /etc/apache2/sites-available/sitio1.conf
 ```
 
-```apache
-<VirtualHost *:80>
-    ServerName sitio1.local
-    ServerAdmin admin@sitio1.local
-    DocumentRoot /var/www/sitio1
-    <Directory /var/www/sitio1>
-        Options -Indexes +FollowSymLinks
-        AllowOverride None
-        Require all granted
-    </Directory>
-    ErrorLog ${APACHE_LOG_DIR}/sitio1_error.log
-    CustomLog ${APACHE_LOG_DIR}/sitio1_access.log combined
-</VirtualHost>
-```
-
 ![sitio1.conf](img/29-sitio1-conf.png)
 
 Lo que significa cada cosa:
@@ -632,24 +505,9 @@ sudo systemctl reload apache2
 apache2ctl -S
 ```
 
-```text
-Enabling site sitio1.
-Enabling site sitio2.
-Syntax OK
-
-VirtualHost configuration:
-*:80                   is a NameVirtualHost
-         default server sitio1.local (/etc/apache2/sites-enabled/sitio1.conf:1)
-         port 80 namevhost sitio1.local (/etc/apache2/sites-enabled/sitio1.conf:1)
-         port 80 namevhost sitio2.local (/etc/apache2/sites-enabled/sitio2.conf:1)
-...
-User: name="www-data" id=33
-Group: name="www-data" id=33
-```
-
 Activo los dos sitios, desactivo el que venía por defecto, compruebo que no hay errores y recargo.
 
-En `apache2ctl -S` se ve que:
+En la salida de `apache2ctl -S` (está en la captura del apartado 8.5) se ve que:
 
 - Están los dos sitios, sitio1.local y sitio2.local, en el puerto 80.
 - El 000-default ya no sale, así que se ha desactivado bien.
@@ -677,11 +535,6 @@ curl http://sitio1.local
 curl http://sitio2.local
 ```
 
-```text
-<h1>Bienvenido a SITIO 1</h1>
-<h1>Bienvenido a SITIO 2</h1>
-```
-
 ![Virtual hosts funcionando y apache2ctl -S](img/31-a2ensite-apache2ctl-S-curl.png)
 
 Cada nombre enseña su página, aunque los dos están en el mismo servidor y en el mismo puerto. Funciona.
@@ -703,18 +556,6 @@ Yo he usado los **basados en nombre**, porque los dos sitios tienen `<VirtualHos
 ps aux | grep apache2
 grep -E "APACHE_RUN_(USER|GROUP)" /etc/apache2/envvars
 ls -ld /var/www/sitio1 /var/www/sitio1/index.html
-```
-
-```text
-root      11526  ...  /usr/sbin/apache2 -k start
-www-data  11783  ...  /usr/sbin/apache2 -k start
-www-data  11784  ...  /usr/sbin/apache2 -k start
-
-export APACHE_RUN_USER=www-data
-export APACHE_RUN_GROUP=www-data
-
-drwxr-xr-x 2 root root 4096 Oct 16 07:40 /var/www/sitio1
--rw-r--r-- 1 root root   30 Oct 16 07:40 /var/www/sitio1/index.html
 ```
 
 ![Procesos, usuario de Apache y permisos](img/32-ps-envvars-permisos.png)
