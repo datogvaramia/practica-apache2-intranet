@@ -32,8 +32,6 @@
 | Usuario | `daviti_` (con permisos de `sudo`) |
 | Nombre del equipo | `daviti` |
 
-> **Leyenda:** en cada paso aparece el comando en un bloque de código, la salida relevante, la captura y una explicación propia. Las preguntas de reflexión están marcadas con ❓.
-
 ---
 
 ## Apartado 1. Preparación del sistema
