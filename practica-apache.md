@@ -7,8 +7,6 @@
 **Módulo:** Aplicaciones Web
 **Fecha:** octubre de 2026
 
-![Ubuntu](https://img.shields.io/badge/Ubuntu-24.04_LTS-E95420?logo=ubuntu&logoColor=white)
-![Apache](https://img.shields.io/badge/Apache-2.4.58-D22128?logo=apache&logoColor=white)
 
 </div>
 
